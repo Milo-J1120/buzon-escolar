@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buzón Escolar</title>
+<style>
+:root{
+  --navy:#263d63; --purple:#6b5aa6; --cream:#fffdf8;
+  --pink:#f6b3c0; --blue:#b9d9f5; --lav:#d5c8ef;
+  --soft:#eef1f9; --text:#263d63;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;font-family:Arial,Helvetica,sans-serif;color:var(--text);
+  background:var(--cream);line-height:1.5;
+}
+nav{
+  position:sticky;top:0;z-index:10;background:var(--navy);color:white;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 5%;box-shadow:0 3px 12px #0002;
+}
+.brand{font-size:1.35rem;font-weight:800;display:flex;gap:10px;align-items:center}
+.brand span{font-size:1.7rem}
+nav .links{display:flex;gap:28px}
+nav a{color:white;text-decoration:none;font-weight:600;opacity:.9}
+nav a:hover,nav a.active{opacity:1;text-decoration:underline;text-underline-offset:8px}
+.hero{
+  max-width:1200px;margin:auto;padding:65px 5% 35px;position:relative;text-align:center;
+  overflow:hidden;
+}
+.doodle{position:absolute;font-size:4rem;opacity:.9}
+.d1{left:3%;top:70px;transform:rotate(-12deg)}
+.d2{right:4%;top:110px;transform:rotate(10deg)}
+h1{font-size:clamp(2.4rem,6vw,4.3rem);line-height:1.05;margin:0 auto 12px;color:var(--navy)}
+.subtitle{font-size:1.45rem;color:var(--purple);font-weight:700}
+.hero p{max-width:720px;margin:18px auto 35px;font-size:1.08rem}
+.cards{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1050px;margin:auto;
+}
+.card{
+  border-radius:24px;padding:30px 24px;text-align:center;cursor:pointer;
+  border:0;color:var(--text);transition:.2s;box-shadow:0 8px 20px #263d6314;
+}
+.card:hover{transform:translateY(-5px);box-shadow:0 12px 28px #263d6325}
+.card.complaint{background:var(--pink)}
+.card.suggestion{background:var(--blue)}
+.card.praise{background:var(--lav)}
+.icon{font-size:3rem;margin-bottom:5px}
+.card h2{font-size:1.25rem;margin:8px 0}
+.card p{margin:0;font-size:.96rem}
+.anonymous{
+  max-width:1050px;margin:28px auto 0;padding:20px 25px;background:var(--soft);
+  border-radius:20px;display:flex;align-items:center;gap:15px;text-align:left;
+}
+.lock{font-size:2rem}.anon-text{flex:1}.anon-text strong{display:block}
+.switch{position:relative;width:56px;height:31px;display:inline-block}
+.switch input{display:none}
+.slider{position:absolute;inset:0;background:#aeb8d4;border-radius:30px;cursor:pointer}
+.slider:before{content:"";position:absolute;width:23px;height:23px;left:4px;top:4px;background:white;border-radius:50%;transition:.2s}
+.switch input:checked+.slider{background:var(--purple)}
+.switch input:checked+.slider:before{transform:translateX(25px)}
+section{max-width:1100px;margin:30px auto;padding:45px 5%}
+.section-title{text-align:center;font-size:2.2rem;margin:0 0 35px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;text-align:center}
+.step-number{margin:auto;width:55px;height:55px;border-radius:50%;background:#dfe4f7;display:grid;place-items:center;font-size:1.5rem;font-weight:800}
+.step-icon{font-size:2.4rem;margin:10px}
+.form-section{display:none}
+.form-box{
+  background:white;border-radius:25px;padding:30px;box-shadow:0 10px 30px #263d6318;
+  max-width:760px;margin:auto;
+}
+.form-box h2{margin-top:0}
+label{display:block;font-weight:700;margin:18px 0 7px}
+select,textarea,input[type="text"]{
+  width:100%;padding:13px;border:2px solid #dce1ee;border-radius:12px;
+  font:inherit;outline:none;background:#fff;
+}
+textarea{min-height:160px;resize:vertical}
+select:focus,textarea:focus,input[type="text"]:focus{border-color:var(--purple)}
+.actions{display:flex;gap:12px;margin-top:20px}
+button{
+  border:0;border-radius:12px;padding:13px 20px;font:inherit;font-weight:700;cursor:pointer
+}
+.primary{background:var(--navy);color:#fff}.secondary{background:#e9ecf5;color:var(--navy)}
+.notice{margin-top:15px;padding:13px;border-radius:12px;background:#f4f1ff;color:var(--purple)}
+.messages{display:none}
+.message{
+  background:white;border-left:6px solid var(--purple);padding:18px 20px;border-radius:14px;
+  margin:12px 0;box-shadow:0 5px 18px #263d6310;
+}
+.empty{text-align:center;background:#f3f5fa;padding:25px;border-radius:15px}
+footer{
+  background:#eaf0fa;padding:35px 5%;text-align:center;font-weight:700;
+  margin-top:30px
+}
+@media(max-width:800px){
+  nav{flex-wrap:wrap;gap:10px}.links{width:100%;justify-content:center;gap:16px!important}
+  .cards,.steps{grid-template-columns:1fr}.doodle{display:none}
+  .hero{padding-top:45px}.anonymous{align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand"><span>✉️</span> Buzón Escolar</div>
+  <div class="links">
+    <a href="#inicio" class="active">Inicio</a>
+    <a href="#mensajes" onclick="showMessages()">Mis mensajes</a>
+    <a href="#avisos">Avisos</a>
+  </div>
+</nav>
+
+<main id="inicio">
+  <div class="hero">
+    <div class="doodle d1">✉️</div>
+    <div class="doodle d2">✈️</div>
+    <h1>Buzón de<br>quejas y sugerencias</h1>
+    <div class="subtitle">Tu opinión importa ♡</div>
+    <p>Un espacio para compartir quejas, sugerencias, felicitaciones o situaciones que quieras hacer saber a la escuela.</p>
+
+    <div class="cards">
+      <button class="card complaint" onclick="openForm('Queja')">
+        <div class="icon">❕</div><h2>Enviar una queja →</h2>
+        <p>Si algo no está funcionando o te parece injusto.</p>
+      </button>
+      <button class="card suggestion" onclick="openForm('Sugerencia')">
+        <div class="icon">💡</div><h2>Enviar una sugerencia →</h2>
+        <p>Si tienes ideas para mejorar nuestra escuela.</p>
+      </button>
+      <button class="card praise" onclick="openForm('Felicitación')">
+        <div class="icon">☆</div><h2>Enviar una felicitación →</h2>
+        <p>Si quieres reconocer algo positivo.</p>
+      </button>
+    </div>
+
+    <div class="anonymous">
+      <div class="lock">🔒</div>
+      <div class="anon-text"><strong>¿Quieres hacerlo de forma anónima?</strong>Si, puedes enviar tu mensaje sin proporcionar tu nombre.</div>
+      <label class="switch" aria-label="Enviar de forma anónima">
+        <input id="anonymous" type="checkbox"><span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <section>
+    <h2 class="section-title">¿Cómo funciona?</h2>
+    <div class="steps">
+      <div><div class="step-number">1</div><div class="step-icon">☝️</div><h3>Elige el tipo de mensaje</h3><p>Indica si es una queja, sugerencia o felicitación.</p></div>
+      <div><div class="step-number">2</div><div class="step-icon">📝</div><h3>Cuéntanos lo que pasó</h3><p>Escribe tu mensaje de forma clara y respetuosa.</p></div>
+      <div><div class="step-number">3</div><div class="step-icon">➤</div><h3>Envía tu mensaje</h3><p>Revisa que todo esté correcto y da clic en enviar.</p></div>
+    </div>
+  </section>
+
+  <section id="formulario" class="form-section">
+    <div class="form-box">
+      <h2 id="formTitle">Enviar mensaje</h2>
+      <form id="messageForm">
+        <label for="type">Tipo de mensaje</label>
+        <select id="type">
+          <option>Queja</option><option>Sugerencia</option><option>Felicitación</option>
+        </select>
+        <div id="nameWrap">
+          <label for="name">Nombre (opcional)</label>
+          <input id="name" type="text" placeholder="Escribe tu nombre">
+        </div>
+        <label for="message">Tu mensaje</label>
+        <textarea id="message" required placeholder="Cuéntanos lo que quieres compartir..."></textarea>
+        <div class="notice">🔒 Si activaste el modo anónimo, tu nombre no se guardará en este mensaje.</div>
+        <div class="actions">
+          <button type="submit" class="primary">Enviar mensaje</button>
+          <button type="button" class="secondary" onclick="closeForm()">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="mensajes" class="messages">
+    <h2 class="section-title">Mis mensajes</h2>
+    <div id="messageList"></div>
+  </section>
+
+  <section id="avisos">
+    <h2 class="section-title">📢 Avisos</h2>
+    <div class="empty">Aquí aparecerán avisos importantes de la escuela.</div>
+  </section>
+</main>
+
+<footer>¡Juntos construimos una mejor escuela! ♡</footer>
+
+<script>
+const formSection=document.getElementById('formulario');
+const form=document.getElementById('messageForm');
+const type=document.getElementById('type');
+const anonymous=document.getElementById('anonymous');
+const nameWrap=document.getElementById('nameWrap');
+const nameInput=document.getElementById('name');
+const list=document.getElementById('messageList');
+let messages=JSON.parse(localStorage.getItem('buzonMessages')||'[]');
+
+function openForm(kind){
+  type.value=kind;
+  document.getElementById('formTitle').textContent='Enviar '+kind.toLowerCase();
+  formSection.style.display='block';
+  formSection.scrollIntoView({behavior:'smooth'});
+  updateName();
+}
+function closeForm(){formSection.style.display='none'}
+anonymous.addEventListener('change',updateName);
+function updateName(){
+  nameWrap.style.display=anonymous.checked?'none':'block';
+  if(anonymous.checked) nameInput.value='';
+}
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const item={
+    type:type.value,
+    name:anonymous.checked?'Anónimo':(nameInput.value.trim()||'Sin nombre'),
+    message:document.getElementById('message').value.trim(),
+    date:new Date().toLocaleString('es-MX')
+  };
+  messages.unshift(item);
+  localStorage.setItem('buzonMessages',JSON.stringify(messages));
+  form.reset(); updateName(); closeForm(); renderMessages();
+  alert('¡Tu mensaje se guardó correctamente! 💗');
+});
+function showMessages(){
+  renderMessages();
+  document.getElementById('mensajes').style.display='block';
+}
+function renderMessages(){
+  document.getElementById('mensajes').style.display='block';
+  list.innerHTML=messages.length?messages.map(m=>`
+    <div class="message">
+      <strong>${escapeHtml(m.type)}</strong> · ${escapeHtml(m.name)}
+      <small style="display:block;opacity:.65">${escapeHtml(m.date)}</small>
+      <p>${escapeHtml(m.message)}</p>
+    </div>`).join(''):'<div class="empty">Todavía no tienes mensajes enviados.</div>';
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+</script>
+</body>
+</html>
