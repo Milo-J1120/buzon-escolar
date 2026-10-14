@@ -190,58 +190,114 @@ footer{
 
 <footer>¡Juntos construimos una mejor escuela! ♡</footer>
 
-<script>
-const formSection=document.getElementById('formulario');
-const form=document.getElementById('messageForm');
-const type=document.getElementById('type');
-const anonymous=document.getElementById('anonymous');
-const nameWrap=document.getElementById('nameWrap');
-const nameInput=document.getElementById('name');
-const list=document.getElementById('messageList');
-let messages=JSON.parse(localStorage.getItem('buzonMessages')||'[]');
 
-function openForm(kind){
-  type.value=kind;
-  document.getElementById('formTitle').textContent='Enviar '+kind.toLowerCase();
-  formSection.style.display='block';
-  formSection.scrollIntoView({behavior:'smooth'});
+<script>
+const SUPABASE_URL = 'https://weqzeyptijrjkliswxai.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_jq7gfZKldAgSFqQ3uf3FWg_urDTg6JM';
+
+const formSection = document.getElementById('formulario');
+const form = document.getElementById('messageForm');
+const type = document.getElementById('type');
+const anonymous = document.getElementById('anonymous');
+const nameWrap = document.getElementById('nameWrap');
+const nameInput = document.getElementById('name');
+const list = document.getElementById('messageList');
+
+function openForm(kind) {
+  type.value = kind;
+  document.getElementById('formTitle').textContent =
+    'Enviar ' + kind.toLowerCase();
+  formSection.style.display = 'block';
+  formSection.scrollIntoView({ behavior: 'smooth' });
   updateName();
 }
-function closeForm(){formSection.style.display='none'}
-anonymous.addEventListener('change',updateName);
-function updateName(){
-  nameWrap.style.display=anonymous.checked?'none':'block';
-  if(anonymous.checked) nameInput.value='';
+
+function closeForm() {
+  formSection.style.display = 'none';
 }
-form.addEventListener('submit',e=>{
-  e.preventDefault();
-  const item={
-    type:type.value,
-    name:anonymous.checked?'Anónimo':(nameInput.value.trim()||'Sin nombre'),
-    message:document.getElementById('message').value.trim(),
-    date:new Date().toLocaleString('es-MX')
-  };
-  messages.unshift(item);
-  localStorage.setItem('buzonMessages',JSON.stringify(messages));
-  form.reset(); updateName(); closeForm(); renderMessages();
-  alert('¡Tu mensaje se guardó correctamente! 💗');
+
+anonymous.addEventListener('change', updateName);
+
+function updateName() {
+  nameWrap.style.display = anonymous.checked ? 'none' : 'block';
+  if (anonymous.checked) nameInput.value = '';
+}
+
+let supabaseClient;
+
+function loadSupabase() {
+  return new Promise((resolve, reject) => {
+    if (window.supabase) {
+      resolve();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src =
+      'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = resolve;
+    script.onerror = () =>
+      reject(new Error('No se pudo cargar la conexión.'));
+    document.head.appendChild(script);
+  });
+}
+
+const ready = loadSupabase().then(() => {
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
 });
-function showMessages(){
-  renderMessages();
-  document.getElementById('mensajes').style.display='block';
-}
-function renderMessages(){
-  document.getElementById('mensajes').style.display='block';
-  list.innerHTML=messages.length?messages.map(m=>`
-    <div class="message">
-      <strong>${escapeHtml(m.type)}</strong> · ${escapeHtml(m.name)}
-      <small style="display:block;opacity:.65">${escapeHtml(m.date)}</small>
-      <p>${escapeHtml(m.message)}</p>
-    </div>`).join(''):'<div class="empty">Todavía no tienes mensajes enviados.</div>';
-}
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const message = document.getElementById('message')
+    .value.trim();
+
+  if (!message) {
+    alert('Escribe tu mensaje antes de enviarlo.');
+    return;
+  }
+
+  const button = form.querySelector('button[type="submit"]');
+  button.disabled = true;
+  button.textContent = 'Enviando...';
+
+  try {
+    await ready;
+
+    const { error } = await supabaseClient
+      .from('Mensajes')
+      .insert({
+        tipo: type.value,
+        mensaje: message,
+        anonimo: anonymous.checked
+      });
+
+    if (error) throw error;
+
+    form.reset();
+    updateName();
+    closeForm();
+    alert('¡Tu mensaje se envió correctamente! 💗');
+  } catch (error) {
+    console.error(error);
+    alert(
+      'No se pudo enviar el mensaje. Revisa la conexión y las políticas de Supabase.'
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Enviar mensaje';
+  }
+});
+
+function showMessages() {
+  document.getElementById('mensajes').style.display = 'block';
+  list.innerHTML =
+    '<div class="empty">La consulta privada de mensajes se configurará en el siguiente paso.</div>';
 }
 </script>
+
 </body>
 </html>
