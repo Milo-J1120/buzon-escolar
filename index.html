@@ -292,11 +292,112 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-function showMessages() {
+
+async function showMessages() {
   document.getElementById('mensajes').style.display = 'block';
-  list.innerHTML =
-    '<div class="empty">La consulta privada de mensajes se configurará en el siguiente paso.</div>';
+
+  list.innerHTML = `
+    <div class="form-box">
+      <h3>Acceso privado</h3>
+      <p>Inicia sesión para consultar los mensajes.</p>
+      <form id="loginForm">
+        <label for="loginEmail">Tu correo</label>
+        <input id="loginEmail" type="email" required
+          autocomplete="username" placeholder="Correo de tu cuenta">
+        <label for="loginPassword">Contraseña</label>
+        <input id="loginPassword" type="password" required
+          autocomplete="current-password" placeholder="Tu contraseña">
+        <div class="actions">
+          <button class="primary" type="submit">Iniciar sesión</button>
+        </div>
+      </form>
+      <div id="loginStatus" role="status"></div>
+    </div>
+  `;
+
+  document.getElementById('loginForm').addEventListener(
+    'submit', async (e) => {
+      e.preventDefault();
+
+      const status = document.getElementById('loginStatus');
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const button = e.currentTarget.querySelector('button');
+
+      button.disabled = true;
+      status.textContent = 'Verificando acceso...';
+
+      try {
+        await ready;
+
+        const { data, error } = await supabaseClient.auth
+          .signInWithPassword({ email, password });
+
+        if (error) throw error;
+
+        if (data.user.id !== 'da2bfd17-a169-4c4e-8a42-e32beb3bd1cc') {
+          await supabaseClient.auth.signOut();
+          throw new Error('Esta cuenta no tiene acceso al buzón privado.');
+        }
+
+        status.textContent = 'Cargando mensajes...';
+
+        const { data: messages, error: readError } =
+          await supabaseClient
+            .from('Mensajes')
+            .select('id, created_at, tipo, mensaje, anonimo, estado')
+            .order('created_at', { ascending: false });
+
+        if (readError) throw readError;
+
+        list.replaceChildren();
+
+        if (!messages.length) {
+          list.textContent = 'Todavía no hay mensajes.';
+          return;
+        }
+
+        for (const item of messages) {
+          const card = document.createElement('article');
+          card.className = 'message';
+
+          const title = document.createElement('h3');
+          title.textContent = item.tipo || 'Mensaje';
+
+          const content = document.createElement('p');
+          content.textContent = item.mensaje || '';
+
+          const state = document.createElement('p');
+          state.textContent = 'Estado: ' + (item.estado || 'Pendiente');
+
+          const date = document.createElement('small');
+          date.textContent = item.created_at
+            ? new Date(item.created_at).toLocaleString('es-MX')
+            : '';
+
+          card.append(title, content, state, date);
+          list.appendChild(card);
+        }
+
+        const logout = document.createElement('button');
+        logout.className = 'secondary';
+        logout.textContent = 'Cerrar sesión';
+        logout.onclick = async () => {
+          await supabaseClient.auth.signOut();
+          showMessages();
+        };
+        list.appendChild(logout);
+
+      } catch (error) {
+        status.textContent =
+          error.message || 'No se pudieron cargar los mensajes.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+  );
 }
+
 </script>
 
 </body>
